@@ -1,0 +1,9 @@
+URLS for online ttt1.html and ttt2.html are as follows:
+
+https://www.tylermalka.com/E28/ttt1.html
+https://www.tylermalka.com/E28/ttt2.html
+
+
+Identify an area of CSS code you feel really good about – and indicate why:
+
+I feel good about the hover CSS. It's simple and yet a very important, fundamental aspect of visual design that conveys a lot of information to the user. 

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TicTacToe v3</title>
+  <style>
+    /* Page title styling */
+    h1 {
+      text-align: center;
+      margin-top: 20px;
+    }
+    
+    /* Turn indicator styling */
+    #turnIndicator {
+      width: 330px;
+      margin: 20px auto;
+      padding: 10px;
+      border: 1px solid black;
+      text-align: center;
+      font-size: 24px;
+    }
+    
+    /* Win condition display styling */
+    #winCondition {
+      width: 330px;
+      margin: 20px auto;
+      padding: 10px;
+      border: 1px solid black;
+      text-align: center;
+      font-size: 24px;
+    }
+    
+    /* Container for the Tic Tac Toe squares */
+    .container {
+      width: 330px; /* 3 squares * (100px width + 2*5px margins) */
+      margin: 20px auto; 
+      overflow: hidden;  /* Clear the floats */
+    }
+    
+    /* Each square's styling */
+    .square {
+      width: 100px;
+      height: 100px;
+      margin: 5px;
+      float: left;
+      background-color: #fff;
+      border: 1px solid black; 
+      box-sizing: border-box;  
+      font-size: 72px;       
+      text-align: center;    
+      line-height: 100px;   
+    }
+    
+    /* Hover effect for each square */
+    .square:hover {
+      background-color: #e0e0e0;
+    }
+  </style>
+</head>
+<body>
+  <!-- Page title -->
+  <h1>Tic Tac Toe</h1>
+  
+  <!-- Turn indicator div -->
+  <div id="turnIndicator">X's turn</div>
+  
+  <!-- Container for the squares -->
+  <div class="container">
+    <!-- Provided JavaScript code: Do Not Change -->
+    <script>
+      const NUM_SQUARES = 9;
+      for (let i = 0; i < NUM_SQUARES; i++) {
+        let id = "sq" + i;
+        document.write("<div class='square' id='" + id + "'></div>");
+      }
+    </script>
+  </div>
+  
+  <!-- Use JavaScript to place two X's and one O in the same positions as before -->
+  <script>
+    document.getElementById("sq0").innerHTML = "X";
+    document.getElementById("sq4").innerHTML = "O";
+    document.getElementById("sq8").innerHTML = "X";
+  </script>
+  
+  <!-- Win condition div -->
+  <div id="winCondition">Win condition: TBD</div>
+  
+  <!-- Event handler: Place an X and alert the square number on click -->
+  <script>
+    // Get all square elements by class name
+    var squares = document.getElementsByClassName("square");
+    // Attach the same click event handler to each square
+    for (var i = 0; i < squares.length; i++){
+      squares[i].addEventListener("click", function(){
+        // Extract the square number from the element's id
+        var squareNum = this.id.substring(2);
+        // Place an "X" in the clicked square
+        this.innerHTML = "X";
+        // Display a popup with the square number
+        alert("Square " + squareNum);
+      });
+    }
+  </script>
+</body>
+</html>

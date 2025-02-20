@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TicTacToe v4</title>
+  <style>
+    /* Page title styling */
+    h1 {
+      text-align: center;
+      margin-top: 20px;
+    }
+    
+    /* Turn indicator styling */
+    #turnIndicator {
+      width: 330px;
+      margin: 20px auto;
+      padding: 10px;
+      border: 1px solid black;
+      text-align: center;
+      font-size: 24px;
+    }
+    
+    /* Win condition display styling */
+    #winCondition {
+      width: 330px;
+      margin: 20px auto;
+      padding: 10px;
+      border: 1px solid black;
+      text-align: center;
+      font-size: 24px;
+    }
+    
+    /* Container for the Tic Tac Toe squares */
+    .container {
+      width: 330px; /* 3 squares * (100px width + 2*5px margins) */
+      margin: 20px auto; 
+      overflow: hidden;  /* Clear the floats */
+    }
+    
+    /* Each square's styling */
+    .square {
+      width: 100px;
+      height: 100px;
+      margin: 5px;
+      float: left;
+      background-color: #fff;
+      border: 1px solid black; 
+      box-sizing: border-box;  
+      font-size: 72px;       
+      text-align: center;    
+      line-height: 100px;   
+    }
+    
+    /* Hover effect for each square */
+    .square:hover {
+      background-color: #e0e0e0;
+    }
+  </style>
+</head>
+<body>
+  <!-- Page title -->
+  <h1>Tic Tac Toe</h1>
+  
+  <!-- Turn indicator div -->
+  <div id="turnIndicator"></div>
+  
+  <!-- Container for the squares -->
+  <div class="container">
+    <!-- Provided JavaScript code: DO NOT CHANGE -->
+    <script>
+      const NUM_SQUARES = 9;
+      for (let i = 0; i < NUM_SQUARES; i++) {
+        let id = "sq" + i;
+        document.write("<div class='square' id='" + id + "'></div>");
+      }
+    </script>
+  </div>
+  
+  <!-- Win condition div -->
+  <div id="winCondition">Win condition: TBD</div>
+  
+  <!-- Game logic: Randomly choose starting turn, alternate turns, and prevent overwriting -->
+  <script>
+    // Randomly choose starting turn: X or O
+    let currentTurn = (Math.random() < 0.5) ? "X" : "O";
+    
+    // Update the turn indicator with the starting turn
+    document.getElementById("turnIndicator").innerHTML = currentTurn + "'s turn";
+    
+    // Get all square elements by their class name
+    let squares = document.getElementsByClassName("square");
+    
+    // Attach the same click event handler to each square
+    for (let i = 0; i < squares.length; i++){
+      squares[i].addEventListener("click", function(){
+        // Prevent changing a square that already has an X or O
+        if (this.innerHTML !== "") return;
+        
+        // Place the current turn's marker in the clicked square
+        this.innerHTML = currentTurn;
+        
+        // Alternate the turn
+        currentTurn = (currentTurn === "X") ? "O" : "X";
+        
+        // Update the turn indicator div with the new turn
+        document.getElementById("turnIndicator").innerHTML = currentTurn + "'s turn";
+      });
+    }
+  </script>
+</body>
+</html>
