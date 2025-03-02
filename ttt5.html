@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TicTacToe v4</title>
+  <style>
+    /* Page title styling */
+    h1 {
+      text-align: center;
+      margin-top: 20px;
+    }
+    
+    /* Turn indicator styling */
+    #turnIndicator {
+      width: 330px;
+      margin: 20px auto;
+      padding: 10px;
+      border: 1px solid black;
+      text-align: center;
+      font-size: 24px;
+    }
+    
+    /* Win condition display styling */
+    #winCondition {
+      width: 330px;
+      margin: 20px auto;
+      padding: 10px;
+      border: 1px solid black;
+      text-align: center;
+      font-size: 24px;
+    }
+    
+    /* Container for the Tic Tac Toe squares */
+    .container {
+      width: 330px; /* 3 squares * (100px width + 2*5px margins) */
+      margin: 20px auto; 
+      overflow: hidden;  /* Clear the floats */
+    }
+    
+    /* Each square's styling */
+    .square {
+      width: 100px;
+      height: 100px;
+      margin: 5px;
+      float: left;
+      background-color: #fff;
+      border: 1px solid black; 
+      box-sizing: border-box;  
+      font-size: 72px;       
+      text-align: center;    
+      line-height: 100px;   
+    }
+    
+    /* Hover effect for each square */
+    .square:hover {
+      background-color: #e0e0e0;
+    }
+  </style>
+</head>
+<body>
+  <!-- Page title -->
+  <h1>Tic Tac Toe</h1>
+  
+  <!-- Turn indicator div -->
+  <div id="turnIndicator"></div>
+  
+  <!-- Container for the squares -->
+  <div class="container">
+    <!-- Provided JavaScript code: DO NOT CHANGE -->
+    <script>
+      const NUM_SQUARES = 9;
+      for (let i = 0; i < NUM_SQUARES; i++) {
+        let id = "sq" + i;
+        document.write("<div class='square' id='" + id + "'></div>");
+      }
+    </script>
+  </div>
+  
+  <!-- Win condition div -->
+  <div id="winCondition">Win condition: TBD</div>
+  
+  <!-- Start Game button -->
+  <div style="text-align: center; margin: 20px;">
+    <button id="startGameBtn">Start Game</button>
+  </div>
+  
+  <!-- Game logic: Randomly choose starting turn, alternate turns, and prevent overwriting -->
+  <script>
+    // Randomly choose starting turn: X or O
+    let currentTurn = (Math.random() < 0.5) ? "X" : "O";
+    
+    // Update the turn indicator with the starting turn
+    document.getElementById("turnIndicator").innerHTML = currentTurn + "'s turn";
+    
+    // Get all square elements by their class name
+    let squares = document.getElementsByClassName("square");
+    
+    // Variable to track if game is over
+    let gameOver = false;
+    
+    // Attach the same click event handler to each square
+    for (let i = 0; i < squares.length; i++){
+      squares[i].addEventListener("click", function(){
+        // Prevent changing a square that already has an X or O or if game is over
+        if (this.innerHTML !== "" || gameOver) return;
+        
+        // Place the current turn's marker in the clicked square
+        this.innerHTML = currentTurn;
+        
+        // Create a moves array using map() to represent the current board state
+        let moves = Array.from(squares).map(square => {
+          // Return the value in the square, or "-" if empty
+          return square.innerText || "-";
+        });
+        
+        // Log the moves array to console for debugging
+        console.log("Current board state:", moves);
+        
+        // Create an array of win conditions (8 possible ways to win)
+        let winConditions = [
+          // Rows (3)
+          moves[0] + moves[1] + moves[2],
+          moves[3] + moves[4] + moves[5],
+          moves[6] + moves[7] + moves[8],
+          // Columns (3)
+          moves[0] + moves[3] + moves[6],
+          moves[1] + moves[4] + moves[7],
+          moves[2] + moves[5] + moves[8],
+          // Diagonals (2)
+          moves[0] + moves[4] + moves[8],
+          moves[2] + moves[4] + moves[6]
+        ];
+        
+        // Check for a winner
+        let winner = null;
+        for (let condition of winConditions) {
+          if (condition === "XXX") {
+            winner = "X";
+            break;
+          } else if (condition === "OOO") {
+            winner = "O";
+            break;
+          }
+        }
+        
+        // Check for a stalemate (no empty squares left)
+        let stalemate = !moves.includes("-");
+        
+        // Update the win condition display and game state
+        if (winner) {
+          document.getElementById("winCondition").innerHTML = winner + " wins!";
+          gameOver = true;
+        } else if (stalemate) {
+          document.getElementById("winCondition").innerHTML = "Stalemate - no winner!";
+          gameOver = true;
+        } else {
+          document.getElementById("winCondition").innerHTML = "Win condition: TBD";
+          
+          // Only alternate turn if game is not over
+          currentTurn = (currentTurn === "X") ? "O" : "X";
+          document.getElementById("turnIndicator").innerHTML = currentTurn + "'s turn";
+        }
+      });
+    }
+    
+    // Add functionality to the Start Game button
+    document.getElementById("startGameBtn").addEventListener("click", function() {
+      // Clear all squares
+      for (let i = 0; i < squares.length; i++) {
+        squares[i].innerHTML = "";
+      }
+      
+      // Reset game state
+      gameOver = false;
+      
+      // Randomly choose starting turn again
+      currentTurn = (Math.random() < 0.5) ? "X" : "O";
+      
+      // Update the turn indicator
+      document.getElementById("turnIndicator").innerHTML = currentTurn + "'s turn";
+      
+      // Reset win condition display
+      document.getElementById("winCondition").innerHTML = "Win condition: TBD";
+    });
+  </script>
+</body>
+</html>
