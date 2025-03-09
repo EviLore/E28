@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joe's Hotdogs - Order System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="container">
+        <h2>Joe's Hotdogs Menu</h2>
+        <ul id="menu-list"></ul>
+
+        <h3>Add to Cart</h3>
+        <input type="text" id="item-name" placeholder="Enter item name">
+        <button onclick="addToCart()">Add to Cart</button>
+
+        <h3>Shopping Cart</h3>
+        <div id="cart"></div>
+        <button onclick="checkout()">Checkout</button>
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>

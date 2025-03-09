@@ -1,0 +1,50 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #f4f4f4;
+}
+.container {
+    max-width: 400px;
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+li {
+    font-size: 18px;
+    margin: 5px 0;
+}
+#cart {
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid #000;
+    width: 100%;
+    min-height: 50px;
+    background: #fff7d1;
+    border-radius: 5px;
+}
+button {
+    margin-top: 10px;
+    padding: 10px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    background: #28a745;
+    color: white;
+    font-size: 16px;
+}
+button:hover {
+    background: #218838;
+}
+input {
+    padding: 8px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 80%;
+}
