@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Definitely Not Wordle</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <h1>Definitely Not Wordle</h1>
+
+  <!-- Debug Mode -->
+  <label>
+    <input type="checkbox" id="debug-mode" />
+    Show Answer
+  </label>
+  <p id="debug-answer" style="display: none;"></p>
+
+  <!-- Display area for messages (invalid words, success, etc.) -->
+  <div id="game-message"></div>
+
+  <!-- Game Board -->
+  <div id="game-board"></div>
+
+  <!-- On-screen Keyboard -->
+  <div id="keyboard-container"></div>
+
+  <!-- Play-Again Button -->
+  <button id="play-again" style="display:none;">Play Again</button>
+
+  <!-- Stats panel at the bottom -->
+  <div id="stats-container"></div>
+
+  <!-- Instructions -->
+  <section>
+    <p>
+      Enter a valid 5-letter word and press <strong>Enter</strong> 
+      (type or use the on-screen keyboard). You have 6 attempts.<br/>
+      <strong>Green</strong> tile → correct letter &amp; position.<br/>
+      <strong>Orange</strong> tile → letter is in the word but in a different spot.<br/>
+      <strong>Gray</strong> tile → letter not in the word.<br/>
+    </p>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
