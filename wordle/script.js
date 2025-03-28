@@ -18,6 +18,9 @@ let currentGuess = '';
 let gameEnded = false;
 let keyStates = {};
 
+// Prevent guesses until the word finishes loading
+let loadingWord = true;
+
 // Stats tracking
 let stats = {
   wins: 0,
@@ -109,6 +112,11 @@ function createKeyboard() {
 
 // Handle on-screen keyboard presses
 function handleOnscreenKeyPress(key) {
+  // If word is still loading, block guesses
+  if (loadingWord) {
+    showMessage('Still loading the secret word, please wait...');
+    return;
+  }
   if (gameEnded || currentRow >= rows) return;
   if (key === 'Enter') {
     submitGuess();
@@ -123,7 +131,13 @@ function handleOnscreenKeyPress(key) {
 
 // Handle real keyboard presses
 function handleKeydown(e) {
+  // If word is still loading, block guesses
+  if (loadingWord) {
+    showMessage('Still loading the secret word, please wait...');
+    return;
+  }
   if (gameEnded || currentRow >= rows) return;
+
   const key = e.key;
   if (/^[a-zA-Z]$/.test(key) && currentGuess.length < 5) {
     currentGuess += key.toLowerCase();
@@ -177,6 +191,7 @@ function evaluateGuess(guess, rowIndex) {
   const secretArr = secretWord.split('');
   const guessArr = guess.split('');
   const result = Array(columns).fill('wrong');
+
   for (let i = 0; i < columns; i++) {
     if (guessArr[i] === secretArr[i]) {
       result[i] = 'correct';
@@ -260,10 +275,16 @@ async function resetGame() {
   gameEnded = false;
   secretWord = '';
   keyStates = {};
+  loadingWord = true; // block input until new word arrives
   playAgainBtn.style.display = 'none';
+
   createBoard();
   createKeyboard();
+  showMessage('Loading word...');
   secretWord = await fetchSecretWord();
+  showMessage('');
+  loadingWord = false;
+
   showOrHideDebugAnswer();
 }
 
@@ -283,7 +304,14 @@ window.addEventListener('load', async () => {
   displayStats();
   createBoard();
   createKeyboard();
+
+  // Indicate word is loading
+  showMessage('Loading word...');
   secretWord = await fetchSecretWord();
+  showMessage('');
+  loadingWord = false; // now the word is ready
+
+  // Only now do we allow actual guessing
   document.addEventListener('keydown', handleKeydown);
   debugModeCheckbox.addEventListener('change', showOrHideDebugAnswer);
   playAgainBtn.addEventListener('click', resetGame);
