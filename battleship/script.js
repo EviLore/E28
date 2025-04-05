@@ -69,30 +69,36 @@ let game = {
   
       if (hitShip) {
         if (hitShip.hits.length === hitShip.size) {
-          // ship sunk
           hitShip.positions.forEach(pos => {
             const [c, r] = pos.split(",").map(Number);
             const sunkCell = document.querySelector(`[data-col="${c}"][data-row="${r}"]`);
             sunkCell.classList.add("sunk");
           });
-          this.setStatus("You sunk a ship");
+          this.setStatus("You sunk a ship!");
         } else {
-          this.setStatus("Hit");
+          this.setStatus("Hit!");
         }
       } else {
         cell.classList.add("miss");
-        this.setStatus("Miss");
+        this.setStatus("Miss!");
       }
   
       if (this.isGameOver()) {
-        this.setStatus("Game Over");
-        this.revealShips();
+        this.revealShips(); // always reveal at end
       }
     },
   
     isGameOver() {
       const allSunk = this.ships.every(ship => ship.hits.length === ship.size);
-      return allSunk || this.guesses >= this.maxGuesses;
+      if (allSunk) {
+        this.setStatus("You win! All ships sunk.");
+        return true;
+      }
+      if (this.guesses >= this.maxGuesses) {
+        this.setStatus("Game Over! Out of guesses.");
+        return true;
+      }
+      return false;
     },
   
     revealShips() {
