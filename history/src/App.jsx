@@ -1,17 +1,35 @@
-import { Routes, Route, Link } from "react-router-dom";  // React Router for navigation
+import { Routes, Route, Link, Navigate } from "react-router-dom";  // React Router for navigation
 import Game from "./components/Game";  // Game component for quiz functionality
 import History from "./components/History";  // History component for stats display
-import { useState } from "react";  // React state hook for component state
+import DifficultySelect from "./components/DifficultySelect";  // New component for difficulty selection
+import { useState, useEffect } from "react";  // React state hook for component state
 
 export default function App() {
-  // State to track when the game should reset (incremented on navigation)
-  const [resetTrigger, setResetTrigger] = useState(0);
+  // State to track if a game is in progress
+  const [gameInProgress, setGameInProgress] = useState(false);
   
-  // Handle navigation to play route - resets the game when user clicks "Play"
-  const handlePlayNavClick = () => {
-    // Increment reset trigger to force Game component to reset its state
-    setResetTrigger(prev => prev + 1);
-  };
+  // Check localStorage for game in progress on component mount
+  useEffect(() => {
+    const checkGameInProgress = () => {
+      try {
+        // Check if there's a current difficulty stored
+        const currentDifficulty = localStorage.getItem("currentGameDifficulty");
+        setGameInProgress(!!currentDifficulty);
+      } catch (err) {
+        console.error("Error checking game status:", err);
+      }
+    };
+    
+    // Initial check
+    checkGameInProgress();
+    
+    // Listen for storage events to update nav bar when game status changes
+    window.addEventListener('storage', checkGameInProgress);
+    
+    return () => {
+      window.removeEventListener('storage', checkGameInProgress);
+    };
+  }, []);
 
   // Common styles for consistent width and layout across all sections
   const containerStyles = {
@@ -48,10 +66,9 @@ export default function App() {
             justifyContent: "center",
             width: "100%"
           }}>
-            {/* Play link - resets game state on click */}
+            {/* Home link - shows difficulty selection */}
             <Link 
-              to="/play" 
-              onClick={handlePlayNavClick}
+              to="/home" 
               style={{ 
                 textDecoration: "none", 
                 color: "#333",
@@ -63,7 +80,26 @@ export default function App() {
               }}
               onMouseEnter={(e) => e.target.style.backgroundColor = "#f0f0f0"}
               onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
-            >Play</Link>
+            >Home</Link>
+            
+            {/* Game link - only shown when a game is in progress */}
+            {gameInProgress && (
+              <Link 
+                to="/play" 
+                style={{ 
+                  textDecoration: "none", 
+                  color: "#333",
+                  fontWeight: "bold",
+                  fontSize: "1.1rem",
+                  padding: "0.5rem 1rem",
+                  borderRadius: "4px",
+                  transition: "background-color 0.2s"
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = "#f0f0f0"}
+                onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
+              >Game</Link>
+            )}
+            
             {/* Stats link - shows game history and statistics */}
             <Link to="/stats" 
               style={{ 
@@ -93,14 +129,16 @@ export default function App() {
         }}>
           {/* Route configuration for the application */}
           <Routes>
-            {/* Default route - shows game component */}
-            <Route path="/" element={<Game resetTrigger={resetTrigger} />} />
-            {/* Play route - shows game component with reset functionality */}
-            <Route path="/play" element={<Game resetTrigger={resetTrigger} />} />
+            {/* Default route - redirects to home */}
+            <Route path="/" element={<Navigate to="/home" replace />} />
+            {/* Home route - shows difficulty selection screen */}
+            <Route path="/home" element={<DifficultySelect setGameInProgress={setGameInProgress} />} />
+            {/* Play route - shows the active gameplay */}
+            <Route path="/play" element={<Game setGameInProgress={setGameInProgress} />} />
             {/* Stats route - shows history/statistics component */}
             <Route path="/stats" element={<History />} />
             {/* Redirect for legacy '/history' route for backward compatibility */}
-            <Route path="/history" element={<History />} />
+            <Route path="/history" element={<Navigate to="/stats" replace />} />
           </Routes>
         </main>
       </div>

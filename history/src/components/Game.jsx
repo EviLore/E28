@@ -1,7 +1,13 @@
 import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { getHistoryQuestion } from "../services/openai";
 
-export default function Game({ resetTrigger }) {
+export default function Game({ setGameInProgress }) {
+  // Navigation hook for returning to home
+  const navigate = useNavigate();
+  // Get search params for difficulty
+  const location = useLocation();
+  
   // State variables for managing the game
   const [questionData, setQuestionData] = useState(null);  // Current question data
   const [selectedAnswer, setSelectedAnswer] = useState(null);  // User's selected answer
@@ -9,7 +15,6 @@ export default function Game({ resetTrigger }) {
   const [loading, setLoading] = useState(false);  // Loading state for API calls
   const [error, setError] = useState(null);  // Error messages
   const [difficulty, setDifficulty] = useState("medium");  // Selected difficulty level
-  const [gameStarted, setGameStarted] = useState(false);  // Whether game has started
   const [points, setPoints] = useState(0);  // Player's total points
   const [streak, setStreak] = useState(0);  // Current streak of correct answers
   const [currentDifficultyStreak, setCurrentDifficultyStreak] = useState("");  // Current difficulty being streaked
@@ -22,9 +27,98 @@ export default function Game({ resetTrigger }) {
     extreme: 5
   };
 
-  // Load saved game data from localStorage when component mounts
+  // Colors for different difficulty levels (visual feedback)
+  const difficultyColors = {
+    easy: "#7bc043", // green
+    medium: "#ffd166", // yellow
+    hard: "#ff9f1c", // orange
+    extreme: "#ff595e" // red
+  };
+
+  // Labels for different difficulty levels with description
+  const difficultyLabels = {
+    easy: "Easy (Middle School) - 3 options",
+    medium: "Medium (High School) - 4 options",
+    hard: "Hard (College) - 5 options",
+    extreme: "Extreme (PhD) - 6 options"
+  };
+
+  // Save the current game state to localStorage
+  const saveGameState = () => {
+    try {
+      localStorage.setItem("currentGameState", JSON.stringify({
+        questionData,
+        selectedAnswer,
+        difficulty
+      }));
+    } catch (err) {
+      console.error("Error saving game state:", err);
+    }
+  };
+
+  // Effect to save game state when relevant state changes
+  useEffect(() => {
+    if (questionData) {
+      saveGameState();
+    }
+  }, [questionData, selectedAnswer, difficulty]);
+
+  // Load saved game data and get difficulty from URL when component mounts
   useEffect(() => {
     try {
+      // First, try to load game state from localStorage
+      const savedGameState = localStorage.getItem("currentGameState");
+      let shouldFetchQuestion = true;
+      let difficultyToUse = "medium";
+      
+      // Check URL parameters for difficulty
+      const params = new URLSearchParams(location.search);
+      const difficultyParam = params.get("difficulty");
+      
+      if (difficultyParam && ["easy", "medium", "hard", "extreme"].includes(difficultyParam)) {
+        difficultyToUse = difficultyParam;
+        
+        // If difficulty from URL is different from saved state, we should fetch a new question
+        if (savedGameState) {
+          const parsedState = JSON.parse(savedGameState);
+          if (parsedState.difficulty !== difficultyParam) {
+            shouldFetchQuestion = true;
+          } else {
+            shouldFetchQuestion = false;
+          }
+        }
+      } else {
+        // Check if there's a stored difficulty
+        const storedDifficulty = localStorage.getItem("currentGameDifficulty");
+        if (storedDifficulty) {
+          difficultyToUse = storedDifficulty;
+        }
+        
+        // If we have a saved state and no URL parameter, use the saved state
+        if (savedGameState) {
+          shouldFetchQuestion = false;
+        }
+      }
+      
+      // Set the difficulty
+      setDifficulty(difficultyToUse);
+      
+      // Store current game difficulty
+      localStorage.setItem("currentGameDifficulty", difficultyToUse);
+      
+      // Update game in progress state
+      if (setGameInProgress) {
+        setGameInProgress(true);
+      }
+      
+      // Load saved game state if available
+      if (savedGameState && !shouldFetchQuestion) {
+        const parsedState = JSON.parse(savedGameState);
+        setQuestionData(parsedState.questionData);
+        setSelectedAnswer(parsedState.selectedAnswer);
+        shouldFetchQuestion = false;
+      }
+      
       // Load question history
       const savedHistory = localStorage.getItem("history");
       if (savedHistory) {
@@ -48,26 +142,16 @@ export default function Game({ resetTrigger }) {
       if (savedDifficultyStreak) {
         setCurrentDifficultyStreak(savedDifficultyStreak);
       }
+      
+      // Fetch new question if needed
+      if (shouldFetchQuestion) {
+        fetchQuestion();
+      }
     } catch (err) {
       console.error("Error loading data from localStorage:", err);
+      fetchQuestion(); // Fallback to fetching a new question
     }
-  }, []);
-
-  // Reset game when resetTrigger changes (triggered from App.jsx when navigation occurs)
-  useEffect(() => {
-    // Reset to difficulty selection screen when Play is clicked
-    if (resetTrigger > 0) {
-      setGameStarted(false);
-      setQuestionData(null);
-      setSelectedAnswer(null);
-    }
-  }, [resetTrigger]);
-
-  // Start the game with the selected difficulty
-  const startGame = async () => {
-    setGameStarted(true);
-    await fetchQuestion();  // Load first question
-  };
+  }, [location, setGameInProgress]);
 
   // Fetch a new question from the OpenAI API
   const fetchQuestion = async () => {
@@ -151,32 +235,21 @@ export default function Game({ resetTrigger }) {
     }
   };
 
-  // Update the selected difficulty level
-  const handleDifficultyChange = (newDifficulty) => {
-    setDifficulty(newDifficulty);
-  };
-
-  // Go back to the difficulty selection screen
-  const resetGame = () => {
-    setGameStarted(false);
-    setQuestionData(null);
-    setSelectedAnswer(null);
-  };
-
-  // Colors for different difficulty levels (visual feedback)
-  const difficultyColors = {
-    easy: "#7bc043", // green
-    medium: "#ffd166", // yellow
-    hard: "#ff9f1c", // orange
-    extreme: "#ff595e" // red
-  };
-
-  // Labels for different difficulty levels with description
-  const difficultyLabels = {
-    easy: "Easy (Middle School) - 3 options",
-    medium: "Medium (High School) - 4 options",
-    hard: "Hard (College) - 5 options",
-    extreme: "Extreme (PhD) - 6 options"
+  // Return to home/difficulty selection
+  const returnToHome = () => {
+    // Clear game in progress status
+    try {
+      localStorage.removeItem("currentGameDifficulty");
+      localStorage.removeItem("currentGameState");
+      // Update game in progress state in parent component
+      if (setGameInProgress) {
+        setGameInProgress(false);
+      }
+    } catch (err) {
+      console.error("Error clearing game state:", err);
+    }
+    
+    navigate('/home');
   };
 
   return (
@@ -253,122 +326,8 @@ export default function Game({ resetTrigger }) {
         borderRadius: "4px"
       }}>{error}</div>}
       
-      {/* Difficulty selection screen */}
-      {!gameStarted ? (
-        <div style={{ textAlign: "center" }}>
-          <h2 style={{ 
-            marginBottom: "1.5rem",
-            color: "#444",
-            fontSize: "1.8rem"
-          }}>Select Difficulty</h2>
-          <div style={{ 
-            display: "flex", 
-            flexDirection: "column", 
-            gap: "0.75rem", 
-            maxWidth: "500px", 
-            margin: "0 auto" 
-          }}>
-            {Object.entries(difficultyLabels).map(([key, label]) => (
-              <button 
-                key={key}
-                onClick={() => handleDifficultyChange(key)}
-                style={{
-                  padding: "1rem",
-                  fontSize: "1rem",
-                  backgroundColor: difficulty === key ? difficultyColors[key] : "#f5f5f5",
-                  border: difficulty === key ? "2px solid #333" : "1px solid #ccc",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                  fontWeight: difficulty === key ? "bold" : "normal",
-                  transition: "all 0.2s ease",
-                  boxShadow: difficulty === key ? "0 2px 4px rgba(0,0,0,0.15)" : "none",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: difficulty === key && (key === "hard" || key === "extreme") ? "#fff" : "#333"
-                }}
-              >
-                {label} <span style={{ marginLeft: "auto", fontWeight: "bold" }}>{difficultyPoints[key]} pt{difficultyPoints[key] > 1 ? "s" : ""}</span>
-              </button>
-            ))}
-          </div>
-          
-          <div style={{ 
-            marginTop: "2.5rem",
-            position: "relative",
-            display: "inline-block" 
-          }}>
-            <button 
-              onClick={startGame} 
-              disabled={loading}
-              style={{ 
-                padding: "0.75rem 2.5rem", 
-                fontSize: "1.2rem", 
-                backgroundColor: "#4CAF50",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-                transition: "all 0.2s ease",
-                position: "relative",
-                overflow: "hidden"
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.backgroundColor = "#45a049";
-                e.currentTarget.style.transform = "translateY(-2px)";
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.backgroundColor = "#4CAF50";
-                e.currentTarget.style.transform = "translateY(0)";
-              }}
-            >
-              {loading ? "Loading..." : "Start Game"}
-            </button>
-          </div>
-          
-          <div style={{ 
-            marginTop: "3rem", 
-            padding: "1rem", 
-            backgroundColor: "#f8f8f8", 
-            borderRadius: "8px",
-            maxWidth: "600px",
-            margin: "3rem auto 0",
-            border: "1px solid #eee"
-          }}>
-            <h3 style={{ 
-              margin: "0 0 0.5rem 0", 
-              color: "#555", 
-              fontSize: "1.1rem" 
-            }}>How to Play</h3>
-            <p style={{ 
-              margin: "0 0 1rem 0", 
-              color: "#666", 
-              fontSize: "0.9rem", 
-              lineHeight: "1.4" 
-            }}>
-              Test your knowledge of history with questions of varying difficulty. 
-              Choose your difficulty level, then answer multiple choice questions. 
-              Each difficulty adds more answer options, making it harder to guess!
-            </p>
-            <h4 style={{ margin: "0.5rem 0", color: "#555", fontSize: "1rem" }}>Point System:</h4>
-            <div style={{ 
-              margin: "0", 
-              fontSize: "0.9rem", 
-              color: "#666", 
-              lineHeight: "1.4"
-            }}>
-              <div style={{ marginBottom: "0.3rem" }}>Easy: +1 for correct, -1 for incorrect</div>
-              <div style={{ marginBottom: "0.3rem" }}>Medium: +2 for correct, -2 for incorrect</div>
-              <div style={{ marginBottom: "0.3rem" }}>Hard: +3 for correct, -3 for incorrect</div>
-              <div style={{ marginBottom: "0.3rem" }}>Extreme: +5 for correct, -5 for incorrect</div>
-              <div>Streak Bonus: +1 point for each consecutive correct answer on the same difficulty</div>
-            </div>
-          </div>
-        </div>
-        
-      /* Loading spinner */
-      ) : !questionData ? (
+      {/* Loading spinner when fetching question */}
+      {loading && !questionData ? (
         <div style={{ textAlign: "center", margin: "2rem" }}>
           <div className="loading-spinner" style={{ 
             border: "4px solid #f3f3f3",
@@ -381,11 +340,9 @@ export default function Game({ resetTrigger }) {
           }}></div>
           <p>Loading question...</p>
         </div>
-      
-      /* Question display */
-      ) : (
+      ) : questionData ? (
         <div>
-          {/* Difficulty indicator and reset button */}
+          {/* Difficulty indicator and return to home button */}
           <div style={{ 
             display: "flex", 
             justifyContent: "space-between", 
@@ -441,7 +398,7 @@ export default function Game({ resetTrigger }) {
               )}
             </div>
             <button 
-              onClick={resetGame}
+              onClick={returnToHome}
               style={{ 
                 padding: "0.4rem 0.75rem", 
                 fontSize: "0.9rem",
@@ -454,7 +411,7 @@ export default function Game({ resetTrigger }) {
               onMouseEnter={e => e.currentTarget.style.backgroundColor = "#f5f5f5"}
               onMouseLeave={e => e.currentTarget.style.backgroundColor = "#fff"}
             >
-              Change Difficulty
+              Return to Home
             </button>
           </div>
           
@@ -696,6 +653,24 @@ export default function Game({ resetTrigger }) {
               </div>
             </div>
           )}
+        </div>
+      ) : (
+        <div style={{ textAlign: "center", padding: "2rem" }}>
+          <p>No question available. Please return to the home screen and start a new game.</p>
+          <button
+            onClick={returnToHome}
+            style={{
+              marginTop: "1rem",
+              padding: "0.75rem 1.5rem",
+              backgroundColor: "#4a6fa5",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer"
+            }}
+          >
+            Return to Home
+          </button>
         </div>
       )}
 

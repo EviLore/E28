@@ -1,10 +1,16 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function History() {
+  // Navigation hook for returning to game
+  const navigate = useNavigate();
+  
   // State to store question history items from localStorage
   const [historyItems, setHistoryItems] = useState([]);
   // State to store player's total points
   const [totalPoints, setTotalPoints] = useState(0);
+  // State to track if there's a game in progress
+  const [gameInProgress, setGameInProgress] = useState(false);
 
   // Load history and points from localStorage when component mounts
   useEffect(() => {
@@ -20,6 +26,10 @@ export default function History() {
       if (savedPoints) {
         setTotalPoints(parseInt(savedPoints, 10));
       }
+      
+      // Check if there's a game in progress
+      const currentGameDifficulty = localStorage.getItem("currentGameDifficulty");
+      setGameInProgress(!!currentGameDifficulty);
     } catch (err) {
       console.error("Error loading history:", err);
     }
@@ -46,10 +56,17 @@ export default function History() {
         localStorage.removeItem("points");
         localStorage.removeItem("streak");
         localStorage.removeItem("currentDifficultyStreak");
+        localStorage.removeItem("currentGameDifficulty");
+        setGameInProgress(false);
       } catch (err) {
         console.error("Error clearing localStorage:", err);
       }
     }
+  };
+  
+  // Return to the active game
+  const returnToGame = () => {
+    navigate('/play');
   };
 
   // Define colors for different difficulty levels (visual feedback)
@@ -102,8 +119,35 @@ export default function History() {
       <div style={{ 
         display: "flex", 
         justifyContent: "center", 
+        gap: "1rem",
         marginBottom: "2rem" 
       }}>
+        {/* Return to game button - only shown when a game is in progress */}
+        {gameInProgress && (
+          <button 
+            onClick={returnToGame}
+            style={{ 
+              backgroundColor: "#e6f2ff", 
+              padding: "0.5rem 1.5rem", 
+              fontSize: "1rem",
+              border: "1px solid #99ccff",
+              borderRadius: "4px",
+              cursor: "pointer",
+              transition: "all 0.2s ease"
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = "#ccdfff";
+              e.currentTarget.style.transform = "translateY(-1px)";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = "#e6f2ff";
+              e.currentTarget.style.transform = "none";
+            }}
+          >
+            Return to Game
+          </button>
+        )}
+        
         {historyItems.length > 0 && (
           <button 
             onClick={resetHistory}

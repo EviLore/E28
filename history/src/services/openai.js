@@ -87,7 +87,7 @@ export const getHistoryQuestion = async (difficulty = "medium") => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o", // Using GPT-4o model for high-quality responses
+        model: "gpt-4o", // Using GPT-4o model
         messages: [
           {
             role: "user",
