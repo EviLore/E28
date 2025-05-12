@@ -92,7 +92,7 @@ export default function History() {
     ? Math.round((correctAnswers / totalQuestions) * 100) 
     : 0;
 
-  return (
+    return (
     <div style={{ 
       padding: "1rem", 
       boxSizing: "border-box"
@@ -461,6 +461,6 @@ export default function History() {
           ))}
         </div>
       )}
-    </div>
-  );
-}
+      </div>
+    );
+  }

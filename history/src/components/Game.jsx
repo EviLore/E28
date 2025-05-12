@@ -194,19 +194,20 @@ export default function Game({ setGameInProgress }) {
     setLoading(true);
     setError(null);
     
-    // Make sure we have a valid string difficulty level
-    let actualDifficulty = difficultyToUse || difficulty;
-    
-    // Validate that difficulty is a string and has a valid value
-    if (typeof actualDifficulty !== 'string' || !["easy", "medium", "hard", "extreme"].includes(actualDifficulty.toLowerCase())) {
-      console.warn(`Invalid difficulty value: ${actualDifficulty}, defaulting to medium`);
-      actualDifficulty = "medium";
-    }
+    // Use the current difficulty by default if none provided
+    const actualDifficulty = difficultyToUse || difficulty;
     
     try {
+      console.log(`Fetching question with difficulty: ${actualDifficulty}`);
       const question = await getHistoryQuestion(actualDifficulty);
-      setQuestionData(question);
-      setSelectedAnswer(null);  // Reset selected answer for new question
+      if (question) {
+        // Update the question data with the actual difficulty used
+        question.difficulty = actualDifficulty;
+        setQuestionData(question);
+        setSelectedAnswer(null);  // Reset selected answer for new question
+      } else {
+        throw new Error("Failed to get question");
+      }
     } catch (err) {
       setError("Failed to load question. Please try again.");
       console.error("Error fetching question:", err);
@@ -221,9 +222,11 @@ export default function Game({ setGameInProgress }) {
     setSelectedAnswer(choice);
 
     const isCorrect = choice === questionData.answer;
-    // Ensure we have a valid difficulty string
-    const difficultyKey = typeof difficulty === 'string' ? difficulty.toLowerCase() : 'medium';
-    const pointValue = difficultyPoints[difficultyKey] || difficultyPoints.medium;
+    // Use the question's actual difficulty, falling back to the state if not available
+    const questionDifficulty = questionData.difficulty || difficulty;
+    const pointValue = difficultyPoints[questionDifficulty.toLowerCase()] || 
+                      difficultyPoints[difficulty.toLowerCase()] || 
+                      difficultyPoints.medium;
     
     let pointsEarned = 0;
     let newStreak = 0;
@@ -231,7 +234,7 @@ export default function Game({ setGameInProgress }) {
     
     if (isCorrect) {
       // Calculate streak bonus - always give +1 bonus after first correct answer
-      if (currentDifficultyStreak === difficulty) {
+      if (currentDifficultyStreak === questionDifficulty) {
         newStreak = streak + 1;  // Increment streak counter
         streakBonus = newStreak > 1 ? 1 : 0;  // +1 bonus for any consecutive correct answer
       } else {
@@ -244,7 +247,7 @@ export default function Game({ setGameInProgress }) {
       pointsEarned = pointValue + streakBonus;
       setPoints(prevPoints => prevPoints + pointsEarned);
       setStreak(newStreak);
-      setCurrentDifficultyStreak(difficulty);
+      setCurrentDifficultyStreak(questionDifficulty);
     } else {
       // Reset streak on wrong answer and deduct points
       pointsEarned = -pointValue;
@@ -278,7 +281,7 @@ export default function Game({ setGameInProgress }) {
       localStorage.setItem("history", JSON.stringify(newHistory));
       localStorage.setItem("points", String(Math.max(0, points + pointsEarned)));
       localStorage.setItem("streak", String(isCorrect ? newStreak : 0));
-      localStorage.setItem("currentDifficultyStreak", isCorrect ? difficulty : "");
+      localStorage.setItem("currentDifficultyStreak", isCorrect ? questionDifficulty : "");
     } catch (err) {
       console.error("Error saving to localStorage:", err);
     }
@@ -299,6 +302,12 @@ export default function Game({ setGameInProgress }) {
     }
     
     navigate('/home');
+  };
+
+  // Handle Next Question
+  const handleNextQuestion = () => {
+    // Explicitly pass the current difficulty to ensure it's used
+    fetchQuestion(difficulty);
   };
 
   return (
@@ -482,15 +491,15 @@ export default function Game({ setGameInProgress }) {
             <ul style={{ listStyleType: "none", padding: 0 }}>
               {Object.entries(questionData.options).map(([letter, text]) => (
                 <li key={letter} style={{ margin: "0.75rem 0" }}>
-                  <button
+                <button
                     onClick={() => handleAnswer(letter)}
-                    disabled={!!selectedAnswer}
-                    style={{
+                  disabled={!!selectedAnswer}
+                  style={{
                       padding: "0.75rem 1rem",
                       width: "100%",
                       textAlign: "left",
                       fontSize: "1rem",
-                      background:
+                    background:
                         selectedAnswer === letter
                           ? letter === questionData.answer
                             ? "linear-gradient(to right, #e6ffe6, #f8fff8)"
@@ -565,10 +574,10 @@ export default function Game({ setGameInProgress }) {
                         fontSize: "1.2rem"
                       }}>✗</span>
                     )}
-                  </button>
-                </li>
-              ))}
-            </ul>
+                </button>
+              </li>
+            ))}
+          </ul>
           </div>
 
           {/* Answer feedback */}
@@ -657,7 +666,7 @@ export default function Game({ setGameInProgress }) {
               {/* Next question button */}
               <div style={{ marginTop: "1.25rem", textAlign: "center" }}>
                 <button 
-                  onClick={fetchQuestion}
+                  onClick={handleNextQuestion}
                   disabled={loading}
                   style={{ 
                     padding: "0.6rem 1.5rem", 
