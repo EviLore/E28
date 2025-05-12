@@ -301,7 +301,6 @@ export default function Game({ resetTrigger }) {
                   display: "flex",
                   alignItems: "center"
                 }}>
-                  <span style={{ marginRight: "5px" }}>📚</span>
                   {questionData.category}
                 </span>
               )}
@@ -317,7 +316,6 @@ export default function Game({ resetTrigger }) {
                   display: "flex",
                   alignItems: "center"
                 }}>
-                  <span style={{ marginRight: "5px" }}>🌍</span>
                   {questionData.region}
                 </span>
               )}

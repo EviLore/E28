@@ -126,7 +126,6 @@ export default function History() {
           marginTop: "1rem",
           border: "1px dashed #ddd"
         }}>
-          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>📜</div>
           <p style={{ fontSize: "1.2rem", margin: "0", color: "#666" }}>
             No history yet. Play the game to see your results here.
           </p>
@@ -154,7 +153,6 @@ export default function History() {
                   alignItems: "center",
                   gap: "1rem"
                 }}>
-                  <span style={{ fontSize: "1.5rem" }}>🎯</span>
                   <div>
                     <div style={{ fontSize: "0.9rem", color: "#666" }}>Accuracy</div>
                     <div style={{ 
@@ -179,7 +177,6 @@ export default function History() {
                   alignItems: "center",
                   gap: "1rem"
                 }}>
-                  <span style={{ fontSize: "1.5rem" }}>📝</span>
                   <div>
                     <div style={{ fontSize: "0.9rem", color: "#666" }}>Questions Answered</div>
                     <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#333" }}>
@@ -344,8 +341,8 @@ export default function History() {
                   {item.timestamp && formatDate(item.timestamp)}
                 </div>
                 <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-                  {item.category && <span>📚 {item.category}</span>}
-                  {item.region && <span>🌍 {item.region}</span>}
+                  {item.category && <span>Category: {item.category}</span>}
+                  {item.region && <span>Region: {item.region}</span>}
                 </div>
               </div>
             </div>
