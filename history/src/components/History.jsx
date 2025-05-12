@@ -75,7 +75,7 @@ export default function History() {
         fontWeight: "bold",
         position: "relative"
       }}>
-        History <span style={{ color: "#4a6fa5" }}>Log</span>
+        Your <span style={{ color: "#4a6fa5" }}>Stats</span>
         <div style={{ 
           height: "4px", 
           width: "80px", 
@@ -199,7 +199,7 @@ export default function History() {
               borderBottom: "1px solid #eee", 
               paddingBottom: "0.5rem", 
               color: "#444"
-            }}>Question History</h3>
+            }}>Past Questions</h3>
           </div>
           
           {historyItems.map((item, index) => (
