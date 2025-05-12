@@ -66,59 +66,101 @@ export default function Game({ setGameInProgress }) {
   // Load saved game data and get difficulty from URL when component mounts
   useEffect(() => {
     try {
-      // First, try to load game state from localStorage
-      const savedGameState = localStorage.getItem("currentGameState");
-      let shouldFetchQuestion = true;
-      let difficultyToUse = "medium";
-      
-      // Check URL parameters for difficulty
+      // Get current URL parameters
       const params = new URLSearchParams(location.search);
       const difficultyParam = params.get("difficulty");
       
+      // First check if there's a difficulty in the URL (this takes precedence)
       if (difficultyParam && ["easy", "medium", "hard", "extreme"].includes(difficultyParam)) {
-        difficultyToUse = difficultyParam;
+        // Get previously saved game state
+        const savedGameState = localStorage.getItem("currentGameState");
+        let previousDifficulty = null;
         
-        // If difficulty from URL is different from saved state, we should fetch a new question
         if (savedGameState) {
-          const parsedState = JSON.parse(savedGameState);
-          if (parsedState.difficulty !== difficultyParam) {
-            shouldFetchQuestion = true;
+          try {
+            const parsedState = JSON.parse(savedGameState);
+            previousDifficulty = parsedState.difficulty;
+          } catch (err) {
+            console.error("Error parsing saved game state:", err);
+          }
+        }
+        
+        // Set the current difficulty from URL
+        setDifficulty(difficultyParam);
+        localStorage.setItem("currentGameDifficulty", difficultyParam);
+        
+        // If there's a difficulty change, fetch a new question
+        if (previousDifficulty !== difficultyParam) {
+          // Clean up any previous game state
+          localStorage.removeItem("currentGameState");
+          setQuestionData(null);
+          setSelectedAnswer(null);
+          // Fetch a new question with the new difficulty
+          fetchQuestion(difficultyParam);
+        } else {
+          // Same difficulty, try to restore game state
+          if (savedGameState) {
+            try {
+              const parsedState = JSON.parse(savedGameState);
+              setQuestionData(parsedState.questionData);
+              setSelectedAnswer(parsedState.selectedAnswer);
+            } catch (err) {
+              console.error("Error restoring game state:", err);
+              fetchQuestion(difficultyParam);
+            }
           } else {
-            shouldFetchQuestion = false;
+            // No saved state, fetch new question
+            fetchQuestion(difficultyParam);
           }
         }
       } else {
-        // Check if there's a stored difficulty
+        // No difficulty in URL, check localStorage
         const storedDifficulty = localStorage.getItem("currentGameDifficulty");
-        if (storedDifficulty) {
-          difficultyToUse = storedDifficulty;
-        }
+        const savedGameState = localStorage.getItem("currentGameState");
         
-        // If we have a saved state and no URL parameter, use the saved state
-        if (savedGameState) {
-          shouldFetchQuestion = false;
+        if (storedDifficulty) {
+          setDifficulty(storedDifficulty);
+          
+          // Try to restore game state if available
+          if (savedGameState) {
+            try {
+              const parsedState = JSON.parse(savedGameState);
+              setQuestionData(parsedState.questionData);
+              setSelectedAnswer(parsedState.selectedAnswer);
+            } catch (err) {
+              console.error("Error restoring game state:", err);
+              fetchQuestion(storedDifficulty);
+            }
+          } else {
+            // No saved state, fetch new question
+            fetchQuestion(storedDifficulty);
+          }
+        } else {
+          // Default to medium if no saved difficulty
+          setDifficulty("medium");
+          localStorage.setItem("currentGameDifficulty", "medium");
+          fetchQuestion("medium");
         }
       }
       
-      // Set the difficulty
-      setDifficulty(difficultyToUse);
-      
-      // Store current game difficulty
-      localStorage.setItem("currentGameDifficulty", difficultyToUse);
-      
-      // Update game in progress state
+      // Mark game in progress
       if (setGameInProgress) {
         setGameInProgress(true);
       }
       
-      // Load saved game state if available
-      if (savedGameState && !shouldFetchQuestion) {
-        const parsedState = JSON.parse(savedGameState);
-        setQuestionData(parsedState.questionData);
-        setSelectedAnswer(parsedState.selectedAnswer);
-        shouldFetchQuestion = false;
-      }
-      
+      // Load other game data
+      loadGameData();
+    } catch (err) {
+      console.error("Error loading game:", err);
+      // Fallback to default difficulty
+      setDifficulty("medium");
+      fetchQuestion("medium");
+    }
+  }, [location.search, setGameInProgress]);
+
+  // Separate function to load game data from localStorage
+  const loadGameData = () => {
+    try {
       // Load question history
       const savedHistory = localStorage.getItem("history");
       if (savedHistory) {
@@ -142,23 +184,21 @@ export default function Game({ setGameInProgress }) {
       if (savedDifficultyStreak) {
         setCurrentDifficultyStreak(savedDifficultyStreak);
       }
-      
-      // Fetch new question if needed
-      if (shouldFetchQuestion) {
-        fetchQuestion();
-      }
     } catch (err) {
-      console.error("Error loading data from localStorage:", err);
-      fetchQuestion(); // Fallback to fetching a new question
+      console.error("Error loading game data:", err);
     }
-  }, [location, setGameInProgress]);
+  };
 
   // Fetch a new question from the OpenAI API
-  const fetchQuestion = async () => {
+  const fetchQuestion = async (difficultyToUse = null) => {
     setLoading(true);
     setError(null);
+    
+    // Use the provided difficulty or fall back to state
+    const actualDifficulty = difficultyToUse || difficulty;
+    
     try {
-      const question = await getHistoryQuestion(difficulty);
+      const question = await getHistoryQuestion(actualDifficulty);
       setQuestionData(question);
       setSelectedAnswer(null);  // Reset selected answer for new question
     } catch (err) {

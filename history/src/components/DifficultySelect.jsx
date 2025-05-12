@@ -43,6 +43,13 @@ export default function DifficultySelect({ setGameInProgress }) {
     setLoading(true);
     
     try {
+      // Check if previous game exists with a different difficulty
+      const previousDifficulty = localStorage.getItem("currentGameDifficulty");
+      if (previousDifficulty !== difficulty) {
+        // Clear any existing game state if difficulty has changed
+        localStorage.removeItem("currentGameState");
+      }
+      
       // Save current game difficulty to localStorage
       localStorage.setItem("currentGameDifficulty", difficulty);
       
