@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 export default function History() {
   // State to store history items
   const [historyItems, setHistoryItems] = useState([]);
+  // State to store total points
+  const [totalPoints, setTotalPoints] = useState(0);
 
   // Load history from localStorage when component mounts
   useEffect(() => {
@@ -10,6 +12,12 @@ export default function History() {
       const savedHistory = localStorage.getItem("history");
       if (savedHistory) {
         setHistoryItems(JSON.parse(savedHistory));
+      }
+      
+      // Load total points
+      const savedPoints = localStorage.getItem("points");
+      if (savedPoints) {
+        setTotalPoints(parseInt(savedPoints, 10));
       }
     } catch (err) {
       console.error("Error loading history:", err);
@@ -190,6 +198,24 @@ export default function History() {
                   </div>
                 </div>
               </div>
+              <div style={{ flex: "1", minWidth: "200px" }}>
+                <div style={{ 
+                  backgroundColor: "#fff", 
+                  padding: "1rem", 
+                  borderRadius: "6px",
+                  border: "1px solid #eee",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem"
+                }}>
+                  <div>
+                    <div style={{ fontSize: "0.9rem", color: "#666" }}>Total Points</div>
+                    <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#4a6fa5" }}>
+                      {totalPoints}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -304,14 +330,50 @@ export default function History() {
               </div>
               
               {/* Result */}
-              <p style={{ 
-                fontWeight: "bold", 
-                color: item.correct ? "green" : "red",
-                margin: "1rem 0",
-                fontSize: "1.1rem"
+              <div style={{ 
+                display: "flex", 
+                justifyContent: "space-between", 
+                alignItems: "flex-start",
+                flexWrap: "wrap",
+                gap: "1rem",
+                margin: "1rem 0"
               }}>
-                {item.correct ? "✅ Correct!" : "❌ Incorrect"}
-              </p>
+                <p style={{ 
+                  fontWeight: "bold", 
+                  color: item.correct ? "green" : "red",
+                  margin: "0",
+                  fontSize: "1.1rem"
+                }}>
+                  {item.correct ? "✅ Correct!" : "❌ Incorrect"}
+                </p>
+                
+                {/* Points information */}
+                {item.pointsEarned !== undefined && (
+                  <div style={{
+                    backgroundColor: "#fff",
+                    padding: "0.5rem 0.75rem",
+                    borderRadius: "4px",
+                    fontSize: "0.9rem",
+                    color: item.pointsEarned >= 0 ? "#4CAF50" : "#ff6b6b",
+                    border: `1px solid ${item.pointsEarned >= 0 ? "#d7f3d7" : "#ffe0e0"}`,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    fontWeight: "bold"
+                  }}>
+                    <span>Points: {item.pointsEarned >= 0 ? "+" : ""}{item.pointsEarned}</span>
+                    {item.pointsTotal !== undefined && (
+                      <span style={{ 
+                        fontSize: "0.8rem", 
+                        color: "#666", 
+                        fontWeight: "normal" 
+                      }}>
+                        (Total: {item.pointsTotal})
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
               
               {/* Explanation */}
               {item.explanation && (
