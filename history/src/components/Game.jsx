@@ -212,7 +212,7 @@ export default function Game({ resetTrigger }) {
             alignItems: "center",
             marginBottom: "1rem"
           }}>
-            <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
               <span 
                 style={{ 
                   backgroundColor: difficultyColors[difficulty.toLowerCase()], 
@@ -224,6 +224,32 @@ export default function Game({ resetTrigger }) {
               >
                 {difficultyLabels[difficulty.toLowerCase()]}
               </span>
+              
+              {/* Add category badge */}
+              {questionData.category && (
+                <span style={{
+                  backgroundColor: "#f0f0f0",
+                  padding: "0.25rem 0.5rem",
+                  borderRadius: "4px",
+                  fontSize: "0.9rem",
+                  color: "#555"
+                }}>
+                  {questionData.category}
+                </span>
+              )}
+              
+              {/* Add region badge if available */}
+              {questionData.region && questionData.region !== "World" && (
+                <span style={{
+                  backgroundColor: "#e8f4ff",
+                  padding: "0.25rem 0.5rem",
+                  borderRadius: "4px",
+                  fontSize: "0.9rem",
+                  color: "#0066cc"
+                }}>
+                  {questionData.region}
+                </span>
+              )}
             </div>
             <button 
               onClick={resetGame}
@@ -280,7 +306,7 @@ export default function Game({ resetTrigger }) {
             }}>
               <p>
                 You answered: <strong>{selectedAnswer}</strong> ({questionData.options[selectedAnswer]}) —{" "}
-                {selectedAnswer === questionData.answer ? "Correct!" : "Wrong! The correct answer was " + questionData.answer}
+                {selectedAnswer === questionData.answer ? "Correct." : "Wrong. The correct answer was " + questionData.answer}
               </p>
               
               {/* Show explanation if available */}
