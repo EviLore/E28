@@ -188,7 +188,7 @@ export default function DifficultySelect({ setGameInProgress }) {
           }}>
             Test your knowledge of history with questions of varying difficulty. 
             Choose your difficulty level, then answer multiple choice questions. 
-            Each difficulty adds more answer options, making it harder to guess!
+            Each difficulty adds more answer options, making it harder to guess.
           </p>
           <h4 style={{ margin: "0.5rem 0", color: "#555", fontSize: "1rem" }}>Point System:</h4>
           <div style={{ 
