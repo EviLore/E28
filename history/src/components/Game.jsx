@@ -10,16 +10,42 @@ export default function Game({ resetTrigger }) {
   const [error, setError] = useState(null);
   const [difficulty, setDifficulty] = useState("medium");
   const [gameStarted, setGameStarted] = useState(false);
+  const [points, setPoints] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [currentDifficultyStreak, setCurrentDifficultyStreak] = useState("");
 
-  // Load history from localStorage when component mounts
+  // Points for each difficulty level
+  const difficultyPoints = {
+    easy: 1,
+    medium: 2,
+    hard: 3,
+    extreme: 5
+  };
+
+  // Load history and points from localStorage when component mounts
   useEffect(() => {
     try {
       const savedHistory = localStorage.getItem("history");
       if (savedHistory) {
         setHistory(JSON.parse(savedHistory));
       }
+      
+      const savedPoints = localStorage.getItem("points");
+      if (savedPoints) {
+        setPoints(parseInt(savedPoints, 10));
+      }
+      
+      const savedStreak = localStorage.getItem("streak");
+      if (savedStreak) {
+        setStreak(parseInt(savedStreak, 10));
+      }
+      
+      const savedDifficultyStreak = localStorage.getItem("currentDifficultyStreak");
+      if (savedDifficultyStreak) {
+        setCurrentDifficultyStreak(savedDifficultyStreak);
+      }
     } catch (err) {
-      console.error("Error loading history:", err);
+      console.error("Error loading data from localStorage:", err);
     }
   }, []);
 
@@ -60,18 +86,49 @@ export default function Game({ resetTrigger }) {
     if (selectedAnswer) return; // prevent double answering
     setSelectedAnswer(choice);
 
+    const isCorrect = choice === questionData.answer;
+    const pointValue = difficultyPoints[difficulty.toLowerCase()];
+    let pointsEarned = 0;
+    let newStreak = 0;
+    let streakBonus = 0;
+    
+    if (isCorrect) {
+      // Calculate streak bonus - always give +1 bonus after first correct answer
+      if (currentDifficultyStreak === difficulty) {
+        newStreak = streak + 1;
+        streakBonus = newStreak > 1 ? 1 : 0; // +1 bonus for any consecutive correct answer
+      } else {
+        newStreak = 1;
+        streakBonus = 0;
+      }
+      
+      pointsEarned = pointValue + streakBonus;
+      setPoints(prevPoints => prevPoints + pointsEarned);
+      setStreak(newStreak);
+      setCurrentDifficultyStreak(difficulty);
+    } else {
+      // Reset streak on wrong answer
+      pointsEarned = -pointValue;
+      setPoints(prevPoints => Math.max(0, prevPoints + pointsEarned)); // Prevent negative points
+      setStreak(0);
+      setCurrentDifficultyStreak("");
+    }
+
     // Create a record of this question and answer
     const result = {
       question: questionData.question,
       options: questionData.options,
       userAnswer: choice,
       answer: questionData.answer,
-      correct: choice === questionData.answer,
+      correct: isCorrect,
       timestamp: new Date().toISOString(),
       explanation: questionData.explanation || "",
       category: questionData.category || "",
       region: questionData.region || "",
-      difficulty: questionData.difficulty || difficulty
+      difficulty: questionData.difficulty || difficulty,
+      pointsEarned: pointsEarned,
+      pointsTotal: Math.max(0, points + pointsEarned),
+      streak: isCorrect ? newStreak : 0
     };
 
     // Add to history and save to localStorage
@@ -80,6 +137,9 @@ export default function Game({ resetTrigger }) {
     
     try {
       localStorage.setItem("history", JSON.stringify(newHistory));
+      localStorage.setItem("points", String(Math.max(0, points + pointsEarned)));
+      localStorage.setItem("streak", String(isCorrect ? newStreak : 0));
+      localStorage.setItem("currentDifficultyStreak", isCorrect ? difficulty : "");
     } catch (err) {
       console.error("Error saving to localStorage:", err);
     }
@@ -136,6 +196,47 @@ export default function Game({ resetTrigger }) {
         }}></div>
       </h1>
       
+      {/* Points display */}
+      <div style={{ 
+        textAlign: "center", 
+        marginBottom: "1.5rem", 
+        backgroundColor: "#f8f8f8",
+        padding: "0.75rem",
+        borderRadius: "6px",
+        border: "1px solid #eee",
+        display: "flex",
+        justifyContent: "center",
+        gap: "2rem"
+      }}>
+        <div>
+          <span style={{ fontWeight: "bold", color: "#333" }}>Points:</span> 
+          <span style={{ 
+            fontSize: "1.2rem", 
+            marginLeft: "0.5rem", 
+            color: "#4a6fa5", 
+            fontWeight: "bold" 
+          }}>{points}</span>
+        </div>
+        {streak > 0 && (
+          <div>
+            <span style={{ fontWeight: "bold", color: "#333" }}>Streak:</span> 
+            <span style={{ 
+              fontSize: "1.2rem", 
+              marginLeft: "0.5rem", 
+              color: "#4CAF50", 
+              fontWeight: "bold" 
+            }}>{streak}</span>
+            {streak > 1 && (
+              <span style={{ 
+                color: "#4CAF50", 
+                marginLeft: "0.5rem", 
+                fontSize: "0.9rem" 
+              }}>(+1 bonus)</span>
+            )}
+          </div>
+        )}
+      </div>
+      
       {/* Show error message if there is one */}
       {error && <div style={{ 
         color: "red", 
@@ -181,7 +282,7 @@ export default function Game({ resetTrigger }) {
                   color: difficulty === key && (key === "hard" || key === "extreme") ? "#fff" : "#333"
                 }}
               >
-                {label}
+                {label} <span style={{ marginLeft: "auto", fontWeight: "bold" }}>{difficultyPoints[key]} pt{difficultyPoints[key] > 1 ? "s" : ""}</span>
               </button>
             ))}
           </div>
@@ -235,7 +336,7 @@ export default function Game({ resetTrigger }) {
               fontSize: "1.1rem" 
             }}>How to Play</h3>
             <p style={{ 
-              margin: "0", 
+              margin: "0 0 1rem 0", 
               color: "#666", 
               fontSize: "0.9rem", 
               lineHeight: "1.4" 
@@ -244,6 +345,20 @@ export default function Game({ resetTrigger }) {
               Choose your difficulty level, then answer multiple choice questions. 
               Each difficulty adds more answer options, making it harder to guess!
             </p>
+            <h4 style={{ margin: "0.5rem 0", color: "#555", fontSize: "1rem" }}>Point System:</h4>
+            <ul style={{ 
+              margin: "0", 
+              paddingLeft: "1.5rem", 
+              fontSize: "0.9rem", 
+              color: "#666", 
+              lineHeight: "1.4" 
+            }}>
+              <li>Easy: +1 for correct, -1 for incorrect</li>
+              <li>Medium: +2 for correct, -2 for incorrect</li>
+              <li>Hard: +3 for correct, -3 for incorrect</li>
+              <li>Extreme: +5 for correct, -5 for incorrect</li>
+              <li>Streak Bonus: +1 point for each consecutive correct answer on the same difficulty</li>
+            </ul>
           </div>
         </div>
         
@@ -455,20 +570,47 @@ export default function Game({ resetTrigger }) {
               border: `1px solid ${selectedAnswer === questionData.answer ? "#aed581" : "#ffab91"}`,
               boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
             }}>
-              <p style={{
-                fontSize: "1.1rem",
-                margin: "0 0 1rem 0",
-                color: selectedAnswer === questionData.answer ? "#33691e" : "#c62828"
-              }}>
-                <strong style={{ 
-                  marginRight: "8px", 
-                  fontSize: "1.2rem" 
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
+                <p style={{
+                  fontSize: "1.1rem",
+                  margin: "0 0 1rem 0",
+                  color: selectedAnswer === questionData.answer ? "#33691e" : "#c62828"
                 }}>
-                  {selectedAnswer === questionData.answer ? "✓" : "✗"}
-                </strong>
-                You answered: <strong>{selectedAnswer}</strong> ({questionData.options[selectedAnswer]}) —{" "}
-                {selectedAnswer === questionData.answer ? "Correct." : "Wrong. The correct answer was " + questionData.answer}
-              </p>
+                  <strong style={{ 
+                    marginRight: "8px", 
+                    fontSize: "1.2rem" 
+                  }}>
+                    {selectedAnswer === questionData.answer ? "✓" : "✗"}
+                  </strong>
+                  You answered: <strong>{selectedAnswer}</strong> ({questionData.options[selectedAnswer]}) —{" "}
+                  {selectedAnswer === questionData.answer ? "Correct." : "Wrong. The correct answer was " + questionData.answer}
+                </p>
+                
+                <div style={{
+                  backgroundColor: "#fff",
+                  padding: "0.5rem 0.75rem",
+                  borderRadius: "4px",
+                  fontSize: "1rem",
+                  fontWeight: "bold",
+                  color: selectedAnswer === questionData.answer ? "#4CAF50" : "#ff6b6b",
+                  border: `1px solid ${selectedAnswer === questionData.answer ? "#d7f3d7" : "#ffe0e0"}`,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center"
+                }}>
+                  <span style={{ fontSize: "0.8rem", color: "#666", marginBottom: "0.2rem" }}>Points</span>
+                  {selectedAnswer === questionData.answer ? (
+                    <span>
+                      +{difficultyPoints[difficulty.toLowerCase()]}
+                      {streak > 1 && (
+                        <span style={{ fontSize: "0.8rem", color: "#4CAF50" }}> +1 bonus</span>
+                      )}
+                    </span>
+                  ) : (
+                    <span>-{difficultyPoints[difficulty.toLowerCase()]}</span>
+                  )}
+                </div>
+              </div>
               
               {/* Show explanation if available */}
               {questionData.explanation && (

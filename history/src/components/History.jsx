@@ -32,6 +32,9 @@ export default function History() {
       setHistoryItems([]);
       try {
         localStorage.removeItem("history");
+        localStorage.removeItem("points");
+        localStorage.removeItem("streak");
+        localStorage.removeItem("currentDifficultyStreak");
       } catch (err) {
         console.error("Error clearing localStorage:", err);
       }
