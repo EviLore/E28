@@ -346,19 +346,18 @@ export default function Game({ resetTrigger }) {
               Each difficulty adds more answer options, making it harder to guess!
             </p>
             <h4 style={{ margin: "0.5rem 0", color: "#555", fontSize: "1rem" }}>Point System:</h4>
-            <ul style={{ 
+            <div style={{ 
               margin: "0", 
-              paddingLeft: "1.5rem", 
               fontSize: "0.9rem", 
               color: "#666", 
-              lineHeight: "1.4" 
+              lineHeight: "1.4"
             }}>
-              <li>Easy: +1 for correct, -1 for incorrect</li>
-              <li>Medium: +2 for correct, -2 for incorrect</li>
-              <li>Hard: +3 for correct, -3 for incorrect</li>
-              <li>Extreme: +5 for correct, -5 for incorrect</li>
-              <li>Streak Bonus: +1 point for each consecutive correct answer on the same difficulty</li>
-            </ul>
+              <div style={{ marginBottom: "0.3rem" }}>Easy: +1 for correct, -1 for incorrect</div>
+              <div style={{ marginBottom: "0.3rem" }}>Medium: +2 for correct, -2 for incorrect</div>
+              <div style={{ marginBottom: "0.3rem" }}>Hard: +3 for correct, -3 for incorrect</div>
+              <div style={{ marginBottom: "0.3rem" }}>Extreme: +5 for correct, -5 for incorrect</div>
+              <div>Streak Bonus: +1 point for each consecutive correct answer on the same difficulty</div>
+            </div>
           </div>
         </div>
         
