@@ -1,20 +1,21 @@
 import { useState, useEffect } from "react";
 
 export default function History() {
-  // State to store history items
+  // State to store question history items from localStorage
   const [historyItems, setHistoryItems] = useState([]);
-  // State to store total points
+  // State to store player's total points
   const [totalPoints, setTotalPoints] = useState(0);
 
-  // Load history from localStorage when component mounts
+  // Load history and points from localStorage when component mounts
   useEffect(() => {
     try {
+      // Retrieve and parse saved question history
       const savedHistory = localStorage.getItem("history");
       if (savedHistory) {
         setHistoryItems(JSON.parse(savedHistory));
       }
       
-      // Load total points
+      // Retrieve and parse saved point total
       const savedPoints = localStorage.getItem("points");
       if (savedPoints) {
         setTotalPoints(parseInt(savedPoints, 10));
@@ -24,7 +25,7 @@ export default function History() {
     }
   }, []);
 
-  // Format date to a readable string
+  // Format ISO date string to a user-friendly readable format
   const formatDate = (isoString) => {
     if (!isoString) return "";
     try {
@@ -34,11 +35,13 @@ export default function History() {
     }
   };
 
-  // Clear history after confirmation
+  // Clear all game history and stats after user confirmation
   const resetHistory = () => {
     if (confirm("Are you sure you want to clear your history? This cannot be undone.")) {
       setHistoryItems([]);
+      setTotalPoints(0); // Reset points in state as well
       try {
+        // Remove all game-related data from localStorage
         localStorage.removeItem("history");
         localStorage.removeItem("points");
         localStorage.removeItem("streak");
@@ -49,7 +52,7 @@ export default function History() {
     }
   };
 
-  // Colors for different difficulty levels
+  // Define colors for different difficulty levels (visual feedback)
   const difficultyColors = {
     easy: "#7bc043", // green
     medium: "#ffd166", // yellow
@@ -57,7 +60,7 @@ export default function History() {
     extreme: "#ff595e" // red
   };
 
-  // Labels for different difficulty levels
+  // Define display labels for difficulty levels
   const difficultyLabels = {
     easy: "Easy (3 options)",
     medium: "Medium (4 options)",
@@ -65,7 +68,7 @@ export default function History() {
     extreme: "Extreme (6 options)"
   };
 
-  // Calculate stats
+  // Calculate summary statistics from history data
   const totalQuestions = historyItems.length;
   const correctAnswers = historyItems.filter(item => item.correct).length;
   const correctPercentage = totalQuestions > 0 

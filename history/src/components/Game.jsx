@@ -3,18 +3,18 @@ import { getHistoryQuestion } from "../services/openai";
 
 export default function Game({ resetTrigger }) {
   // State variables for managing the game
-  const [questionData, setQuestionData] = useState(null);
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [difficulty, setDifficulty] = useState("medium");
-  const [gameStarted, setGameStarted] = useState(false);
-  const [points, setPoints] = useState(0);
-  const [streak, setStreak] = useState(0);
-  const [currentDifficultyStreak, setCurrentDifficultyStreak] = useState("");
+  const [questionData, setQuestionData] = useState(null);  // Current question data
+  const [selectedAnswer, setSelectedAnswer] = useState(null);  // User's selected answer
+  const [history, setHistory] = useState([]);  // History of answered questions
+  const [loading, setLoading] = useState(false);  // Loading state for API calls
+  const [error, setError] = useState(null);  // Error messages
+  const [difficulty, setDifficulty] = useState("medium");  // Selected difficulty level
+  const [gameStarted, setGameStarted] = useState(false);  // Whether game has started
+  const [points, setPoints] = useState(0);  // Player's total points
+  const [streak, setStreak] = useState(0);  // Current streak of correct answers
+  const [currentDifficultyStreak, setCurrentDifficultyStreak] = useState("");  // Current difficulty being streaked
 
-  // Points for each difficulty level
+  // Points awarded for each difficulty level
   const difficultyPoints = {
     easy: 1,
     medium: 2,
@@ -22,24 +22,28 @@ export default function Game({ resetTrigger }) {
     extreme: 5
   };
 
-  // Load history and points from localStorage when component mounts
+  // Load saved game data from localStorage when component mounts
   useEffect(() => {
     try {
+      // Load question history
       const savedHistory = localStorage.getItem("history");
       if (savedHistory) {
         setHistory(JSON.parse(savedHistory));
       }
       
+      // Load accumulated points
       const savedPoints = localStorage.getItem("points");
       if (savedPoints) {
         setPoints(parseInt(savedPoints, 10));
       }
       
+      // Load current streak
       const savedStreak = localStorage.getItem("streak");
       if (savedStreak) {
         setStreak(parseInt(savedStreak, 10));
       }
       
+      // Load current difficulty streak
       const savedDifficultyStreak = localStorage.getItem("currentDifficultyStreak");
       if (savedDifficultyStreak) {
         setCurrentDifficultyStreak(savedDifficultyStreak);
@@ -49,7 +53,7 @@ export default function Game({ resetTrigger }) {
     }
   }, []);
 
-  // Reset game when resetTrigger changes
+  // Reset game when resetTrigger changes (triggered from App.jsx when navigation occurs)
   useEffect(() => {
     // Reset to difficulty selection screen when Play is clicked
     if (resetTrigger > 0) {
@@ -62,17 +66,17 @@ export default function Game({ resetTrigger }) {
   // Start the game with the selected difficulty
   const startGame = async () => {
     setGameStarted(true);
-    await fetchQuestion();
+    await fetchQuestion();  // Load first question
   };
 
-  // Fetch a new question from the API
+  // Fetch a new question from the OpenAI API
   const fetchQuestion = async () => {
     setLoading(true);
     setError(null);
     try {
       const question = await getHistoryQuestion(difficulty);
       setQuestionData(question);
-      setSelectedAnswer(null);
+      setSelectedAnswer(null);  // Reset selected answer for new question
     } catch (err) {
       setError("Failed to load question. Please try again.");
       console.error("Error fetching question:", err);
@@ -83,7 +87,7 @@ export default function Game({ resetTrigger }) {
 
   // Handle when a user selects an answer
   const handleAnswer = (choice) => {
-    if (selectedAnswer) return; // prevent double answering
+    if (selectedAnswer) return; // Prevent double answering
     setSelectedAnswer(choice);
 
     const isCorrect = choice === questionData.answer;
@@ -95,26 +99,28 @@ export default function Game({ resetTrigger }) {
     if (isCorrect) {
       // Calculate streak bonus - always give +1 bonus after first correct answer
       if (currentDifficultyStreak === difficulty) {
-        newStreak = streak + 1;
-        streakBonus = newStreak > 1 ? 1 : 0; // +1 bonus for any consecutive correct answer
+        newStreak = streak + 1;  // Increment streak counter
+        streakBonus = newStreak > 1 ? 1 : 0;  // +1 bonus for any consecutive correct answer
       } else {
+        // Reset streak if difficulty changed
         newStreak = 1;
         streakBonus = 0;
       }
       
+      // Calculate total points earned for this question
       pointsEarned = pointValue + streakBonus;
       setPoints(prevPoints => prevPoints + pointsEarned);
       setStreak(newStreak);
       setCurrentDifficultyStreak(difficulty);
     } else {
-      // Reset streak on wrong answer
+      // Reset streak on wrong answer and deduct points
       pointsEarned = -pointValue;
       setPoints(prevPoints => Math.max(0, prevPoints + pointsEarned)); // Prevent negative points
       setStreak(0);
       setCurrentDifficultyStreak("");
     }
 
-    // Create a record of this question and answer
+    // Create a record of this question and answer for history
     const result = {
       question: questionData.question,
       options: questionData.options,
@@ -131,7 +137,7 @@ export default function Game({ resetTrigger }) {
       streak: isCorrect ? newStreak : 0
     };
 
-    // Add to history and save to localStorage
+    // Add to history and save all game data to localStorage
     const newHistory = [...history, result];
     setHistory(newHistory);
     
@@ -145,7 +151,7 @@ export default function Game({ resetTrigger }) {
     }
   };
 
-  // Update the selected difficulty
+  // Update the selected difficulty level
   const handleDifficultyChange = (newDifficulty) => {
     setDifficulty(newDifficulty);
   };
@@ -157,7 +163,7 @@ export default function Game({ resetTrigger }) {
     setSelectedAnswer(null);
   };
 
-  // Colors for different difficulty levels
+  // Colors for different difficulty levels (visual feedback)
   const difficultyColors = {
     easy: "#7bc043", // green
     medium: "#ffd166", // yellow
@@ -165,7 +171,7 @@ export default function Game({ resetTrigger }) {
     extreme: "#ff595e" // red
   };
 
-  // Labels for different difficulty levels
+  // Labels for different difficulty levels with description
   const difficultyLabels = {
     easy: "Easy (Middle School) - 3 options",
     medium: "Medium (High School) - 4 options",

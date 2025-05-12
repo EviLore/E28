@@ -1,19 +1,19 @@
-import { Routes, Route, Link } from "react-router-dom";
-import Game from "./components/Game";
-import History from "./components/History";
-import { useState } from "react";
+import { Routes, Route, Link } from "react-router-dom";  // React Router for navigation
+import Game from "./components/Game";  // Game component for quiz functionality
+import History from "./components/History";  // History component for stats display
+import { useState } from "react";  // React state hook for component state
 
 export default function App() {
-  // State to track if game should reset
+  // State to track when the game should reset (incremented on navigation)
   const [resetTrigger, setResetTrigger] = useState(0);
   
-  // Handle navigation to play route
+  // Handle navigation to play route - resets the game when user clicks "Play"
   const handlePlayNavClick = () => {
-    // Increment reset trigger to force Game component to reset
+    // Increment reset trigger to force Game component to reset its state
     setResetTrigger(prev => prev + 1);
   };
 
-  // Common styles for consistent width and layout
+  // Common styles for consistent width and layout across all sections
   const containerStyles = {
     maxWidth: "1280px",
     width: "100%",
@@ -28,6 +28,7 @@ export default function App() {
       minHeight: "100vh",
       paddingBottom: "2rem"
     }}>
+      {/* Navigation bar with Play and Stats links */}
       <nav style={{ 
         padding: "1rem",
         borderBottom: "1px solid #ddd",
@@ -47,6 +48,7 @@ export default function App() {
             justifyContent: "center",
             width: "100%"
           }}>
+            {/* Play link - resets game state on click */}
             <Link 
               to="/play" 
               onClick={handlePlayNavClick}
@@ -62,6 +64,7 @@ export default function App() {
               onMouseEnter={(e) => e.target.style.backgroundColor = "#f0f0f0"}
               onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
             >Play</Link>
+            {/* Stats link - shows game history and statistics */}
             <Link to="/stats" 
               style={{ 
                 textDecoration: "none", 
@@ -78,6 +81,7 @@ export default function App() {
           </div>
         </div>
       </nav>
+      {/* Main content container */}
       <div style={{ ...containerStyles, padding: "1.5rem 0" }}>
         <main style={{ 
           backgroundColor: "#fff", 
@@ -87,15 +91,20 @@ export default function App() {
           padding: "1.5rem",
           boxSizing: "border-box"
         }}>
+          {/* Route configuration for the application */}
           <Routes>
+            {/* Default route - shows game component */}
             <Route path="/" element={<Game resetTrigger={resetTrigger} />} />
+            {/* Play route - shows game component with reset functionality */}
             <Route path="/play" element={<Game resetTrigger={resetTrigger} />} />
+            {/* Stats route - shows history/statistics component */}
             <Route path="/stats" element={<History />} />
             {/* Redirect for legacy '/history' route for backward compatibility */}
             <Route path="/history" element={<History />} />
           </Routes>
         </main>
       </div>
+      {/* Footer with attribution */}
       <footer style={{ 
         textAlign: "center", 
         padding: "1rem", 
