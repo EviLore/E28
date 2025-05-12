@@ -194,8 +194,14 @@ export default function Game({ setGameInProgress }) {
     setLoading(true);
     setError(null);
     
-    // Use the provided difficulty or fall back to state
-    const actualDifficulty = difficultyToUse || difficulty;
+    // Make sure we have a valid string difficulty level
+    let actualDifficulty = difficultyToUse || difficulty;
+    
+    // Validate that difficulty is a string and has a valid value
+    if (typeof actualDifficulty !== 'string' || !["easy", "medium", "hard", "extreme"].includes(actualDifficulty.toLowerCase())) {
+      console.warn(`Invalid difficulty value: ${actualDifficulty}, defaulting to medium`);
+      actualDifficulty = "medium";
+    }
     
     try {
       const question = await getHistoryQuestion(actualDifficulty);
@@ -215,7 +221,10 @@ export default function Game({ setGameInProgress }) {
     setSelectedAnswer(choice);
 
     const isCorrect = choice === questionData.answer;
-    const pointValue = difficultyPoints[difficulty.toLowerCase()];
+    // Ensure we have a valid difficulty string
+    const difficultyKey = typeof difficulty === 'string' ? difficulty.toLowerCase() : 'medium';
+    const pointValue = difficultyPoints[difficultyKey] || difficultyPoints.medium;
+    
     let pointsEarned = 0;
     let newStreak = 0;
     let streakBonus = 0;
