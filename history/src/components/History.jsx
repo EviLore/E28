@@ -18,7 +18,9 @@ export default function History() {
       // Retrieve and parse saved question history
       const savedHistory = localStorage.getItem("history");
       if (savedHistory) {
-        setHistoryItems(JSON.parse(savedHistory));
+        // Parse the history, but don't modify it yet
+        const parsedHistory = JSON.parse(savedHistory);
+        setHistoryItems(parsedHistory);
       }
       
       // Retrieve and parse saved point total
@@ -57,6 +59,7 @@ export default function History() {
         localStorage.removeItem("streak");
         localStorage.removeItem("currentDifficultyStreak");
         localStorage.removeItem("currentGameDifficulty");
+        localStorage.removeItem("currentGameState");
         setGameInProgress(false);
       } catch (err) {
         console.error("Error clearing localStorage:", err);
@@ -92,7 +95,16 @@ export default function History() {
     ? Math.round((correctAnswers / totalQuestions) * 100) 
     : 0;
 
-    return (
+  // Get a copy of the history items sorted by timestamp, most recent first
+  const sortedHistoryItems = [...historyItems].sort((a, b) => {
+    // If timestamp is missing, put the item at the end
+    if (!a.timestamp) return 1;
+    if (!b.timestamp) return -1;
+    // Sort in descending order (newest first)
+    return new Date(b.timestamp) - new Date(a.timestamp);
+  });
+
+  return (
     <div style={{ 
       padding: "1rem", 
       boxSizing: "border-box"
@@ -271,11 +283,11 @@ export default function History() {
             <h3 style={{ 
               borderBottom: "1px solid #eee", 
               paddingBottom: "0.5rem", 
-              color: "#444"
+              color: "#444" 
             }}>Past Questions</h3>
           </div>
           
-          {historyItems.map((item, index) => (
+          {sortedHistoryItems.map((item, index) => (
             <div key={index} style={{ 
               margin: "1.5rem 0", 
               padding: "1.5rem", 
